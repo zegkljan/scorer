@@ -1,6 +1,9 @@
+export type HA = 'home' | 'away';
+
 interface Side {
   name: string;
   points: number;
+  challenges: number;
 }
 
 export interface DisplayState {
@@ -8,7 +11,7 @@ export interface DisplayState {
   away: Side;
   time: number;
   overtime: boolean;
-  advantage?: 'home' | 'away';
+  advantage?: HA;
   reversed: boolean;
   next?: {
     home: string;

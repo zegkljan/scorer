@@ -3,23 +3,86 @@
     <div class="sides col row">
       <div v-if="display.reversed" class="home col column justify-between">
         <div class="name col-auto">{{ display.home.name }}</div>
+        <div class="challenges col row justify-center">
+          <q-icon
+            v-for="n in display.home.challenges"
+            :key="n"
+            :name="mdiEye"
+          />
+        </div>
         <div class="score col-auto">{{ display.home.points }}</div>
+        <div
+          class="advantage col-auto"
+          :class="{ invisible: display.advantage !== 'home' }"
+        >
+          <q-icon :name="mdiShieldStar" />
+        </div>
       </div>
       <div v-else class="away col column justify-between">
         <div class="name col-auto">{{ display.away.name }}</div>
+        <div class="challenges col row justify-center">
+          <q-icon
+            v-for="n in display.away.challenges"
+            :key="n"
+            :name="mdiEye"
+          />
+        </div>
         <div class="score col-auto">{{ display.away.points }}</div>
+        <div
+          class="advantage col-auto"
+          :class="{ invisible: display.advantage !== 'away' }"
+        >
+          <q-icon :name="mdiShieldStar" />
+        </div>
       </div>
       <div v-if="display.reversed" class="away col column justify-between">
         <div class="name col-auto">{{ display.away.name }}</div>
+        <div class="challenges col row justify-center">
+          <q-icon
+            v-for="n in display.away.challenges"
+            :key="n"
+            :name="mdiEye"
+          />
+        </div>
         <div class="score col-auto">{{ display.away.points }}</div>
+        <div
+          class="advantage col-auto"
+          :class="{ invisible: display.advantage !== 'away' }"
+        >
+          <q-icon :name="mdiShieldStar" />
+        </div>
       </div>
       <div v-else class="home col column justify-between">
         <div class="name col-auto">{{ display.home.name }}</div>
+        <div class="challenges col row justify-center">
+          <q-icon
+            v-for="n in display.home.challenges"
+            :key="n"
+            :name="mdiEye"
+          />
+        </div>
         <div class="score col-auto">{{ display.home.points }}</div>
+        <div
+          class="advantage col-auto"
+          :class="{ invisible: display.advantage !== 'home' }"
+        >
+          <q-icon :name="mdiShieldStar" />
+        </div>
       </div>
     </div>
-    <div class="time col-auto row justify-center">
-      {{ timeFormat.format(display.time) }}
+    <div
+      class="time col-auto row justify-center"
+      :class="{ overtime: display.overtime }"
+    >
+      <div v-if="display.overtime" class="col overtime">
+        {{ $t('display.overtime') }}
+      </div>
+      <div class="col">
+        {{ timeFormat.format(display.time) }}
+      </div>
+      <div v-if="display.overtime" class="col overtime">
+        {{ $t('display.overtime') }}
+      </div>
     </div>
     <div class="next col-auto row column">
       <div class="col-auto title">{{ $t('display.next') }}</div>
@@ -44,6 +107,7 @@
 <script setup lang="ts">
 import { DisplayState } from 'src/components/models';
 import { onMounted, ref } from 'vue';
+import { mdiShieldStar, mdiEye } from '@quasar/extras/mdi-v7';
 
 const timeFormat = Intl.NumberFormat(undefined, {
   style: 'decimal',
@@ -77,10 +141,19 @@ onMounted(() => {
       background-color: blue;
       color: white;
     }
+
+    .challenges > * {
+      margin-left: 2vh;
+      margin-right: 2vh;
+    }
   }
 
   .time {
     border-bottom: 1px solid black;
+
+    .overtime {
+      text-transform: uppercase;
+    }
   }
 }
 
@@ -89,8 +162,14 @@ onMounted(() => {
     .name {
       font-size: 7.5vh;
     }
+    .challenges {
+      font-size: 5vh;
+    }
     .score {
       font-size: 20vh;
+    }
+    .advantage {
+      font-size: 7.5vh;
     }
   }
   .time {

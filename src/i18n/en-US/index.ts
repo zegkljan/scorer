@@ -4,8 +4,13 @@
 export default {
   scorerSetup: {
     title: 'Scorer setup',
+    teamToggleLabel: 'Team?',
     contestants: 'Contestants',
     bouts: 'Bouts',
+    team: {
+      home: 'Team A',
+      away: 'Team B',
+    },
   },
   scorerControl: {
     title: 'Scorer control',
@@ -17,8 +22,15 @@ export default {
     flipDisplay: 'Flip display',
     prevBout: 'Prev bout',
     nextBout: 'Next bout',
+    overtime: 'Overtime',
+    teamSwitch: {
+      title: 'Switch team member',
+      message:
+        'Select team member that will be switched with the substitute ({substitute}).',
+    },
   },
   display: {
     next: 'Next',
+    overtime: 'ot',
   },
 };

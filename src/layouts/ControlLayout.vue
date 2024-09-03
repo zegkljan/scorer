@@ -9,8 +9,10 @@
     </q-header>
 
     <q-page-container>
-      <scorer-setup v-if="cs === 'setup'" />
-      <scorer-control v-else-if="cs === 'control'" />
+      <q-page padding class="center">
+        <scorer-setup v-if="cs === 'setup'" />
+        <scorer-control v-else-if="cs === 'control'" />
+      </q-page>
     </q-page-container>
   </q-layout>
 </template>

@@ -1,48 +1,138 @@
 <template>
-  <q-page>
-    <div v-if="state.currentBout >= 0" class="local-display column">
+  <template v-if="!state.inner.empty">
+    <div v-if="state.inner.currentBout >= 0" class="local-display column">
       <div class="sides col row">
         <div class="home col column justify-between">
           <div class="name col-auto">{{ state.homeName() }}</div>
+          <div
+            v-if="state.inner.team"
+            class="challenges col-auto row justify-center"
+          >
+            <q-icon
+              v-for="n in state.inner.challengesRemaining[0]"
+              :key="n"
+              :name="mdiEye"
+              size="sm"
+            />
+          </div>
           <div class="score col-auto">{{ state.homeScore() }}</div>
           <div class="btn col-auto row justify-center">
-            <div class="col">
-              <q-btn
-                @click="add('home', 1)"
-                :icon="mdiPlus"
-                size="xl"
-                round
-                flat
-              />
-              <q-btn
-                @click="add('home', -1)"
-                :icon="mdiMinus"
-                size="xl"
-                round
-                flat
-              />
+            <div class="col column">
+              <div class="col row justify-center">
+                <q-btn
+                  @click="add('home', 1)"
+                  :icon="mdiPlus"
+                  size="xl"
+                  flat
+                  dense
+                />
+                <q-btn
+                  @click="add('home', -1)"
+                  :icon="mdiMinus"
+                  size="xl"
+                  flat
+                  dense
+                />
+                <q-btn
+                  v-if="overtime"
+                  @click="advantage = 'home'"
+                  :icon="advantage === 'home' ? mdiStar : mdiStarOutline"
+                  size="l"
+                  flat
+                />
+              </div>
+              <div class="col row justify-center">
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="teamSwitch('home')"
+                  :icon="mdiAccountSwitch"
+                  size="xl"
+                  flat
+                />
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="addChallenge('home', -1)"
+                  :icon="mdiEyeMinus"
+                  size="xl"
+                  flat
+                  dense
+                />
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="addChallenge('home', 1)"
+                  :icon="mdiEyePlus"
+                  size="xl"
+                  flat
+                  dense
+                />
+              </div>
             </div>
           </div>
         </div>
         <div class="away col column justify-between">
           <div class="name col-auto">{{ state.awayName() }}</div>
+          <div
+            v-if="state.inner.team"
+            class="challenges col-auto row justify-center"
+          >
+            <q-icon
+              v-for="n in state.inner.challengesRemaining[1]"
+              :key="n"
+              :name="mdiEye"
+              size="sm"
+            />
+          </div>
           <div class="score col-auto">{{ state.awayScore() }}</div>
           <div class="btn col-auto row justify-center">
-            <div class="col">
-              <q-btn
-                @click="add('away', 1)"
-                :icon="mdiPlus"
-                size="xl"
-                round
-                flat
-              />
-              <q-btn
-                @click="add('away', -1)"
-                :icon="mdiMinus"
-                size="xl"
-                round
-                flat
-              />
+            <div class="col column">
+              <div class="col row justify-center">
+                <q-btn
+                  @click="add('away', 1)"
+                  :icon="mdiPlus"
+                  size="xl"
+                  flat
+                  dense
+                />
+                <q-btn
+                  @click="add('away', -1)"
+                  :icon="mdiMinus"
+                  size="xl"
+                  flat
+                  dense
+                />
+                <q-btn
+                  v-if="overtime"
+                  @click="advantage = 'away'"
+                  :icon="advantage === 'away' ? mdiStar : mdiStarOutline"
+                  size="l"
+                  flat
+                />
+              </div>
+              <div class="col row justify-center">
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="teamSwitch('away')"
+                  :icon="mdiAccountSwitch"
+                  size="xl"
+                  flat
+                />
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="addChallenge('away', -1)"
+                  :icon="mdiEyeMinus"
+                  size="xl"
+                  flat
+                  dense
+                />
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="addChallenge('away', 1)"
+                  :icon="mdiEyePlus"
+                  size="xl"
+                  flat
+                  dense
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -100,48 +190,58 @@
           </div>
         </q-card-section>
         <q-card-section class="col row q-gutter-md">
-          <q-btn
-            @click="switchBout(-1)"
-            :label="$t('scorerControl.prevBout')"
-            :icon="mdiRewind"
-            :disable="!state.isPrev"
-          />
-          <q-btn
-            @click="switchBout(1)"
-            :label="$t('scorerControl.nextBout')"
-            :icon-right="mdiFastForward"
-            :disable="!state.isNext"
-          />
+          <div class="col">
+            <q-btn
+              @click="switchBout(true)"
+              :label="$t('scorerControl.prevBout')"
+              :icon="mdiRewind"
+              :disable="!state.isPrev"
+            />
+          </div>
+          <div class="col">
+            <q-toggle
+              v-model="overtime"
+              :label="$t('scorerControl.overtime')"
+            />
+          </div>
+          <div class="col">
+            <q-btn
+              @click="switchBout(false)"
+              :label="$t('scorerControl.nextBout')"
+              :icon-right="mdiFastForward"
+              :disable="!state.isNext"
+            />
+          </div>
         </q-card-section>
-        <q-card-section class="col-4 bout-list">
+        <q-card-section class="col bout-list">
           <div
-            v-for="(b, i) in state.bouts"
+            v-for="(b, i) in state.inner.bouts"
             :key="i"
             class="col row justify-start"
           >
-            <div class="col row" :class="{ current: i === state.currentBout }">
-              <div class="col text-right">{{ state.contestants[b[0]] }}</div>
+            <div
+              class="col row"
+              :class="{ current: i === state.inner.currentBout }"
+            >
+              <div class="col text-right">{{ state.homeName(i, false) }}</div>
               <div class="col-1 justify-center text-center">
                 {{ i + 1 }}
               </div>
-              <div class="col text-left">{{ state.contestants[b[1]] }}</div>
+              <div class="col text-left">{{ state.awayName(i, false) }}</div>
             </div>
           </div>
         </q-card-section>
       </q-card-section>
     </q-card>
-    <!-- <pre>{{ JSON.stringify(state.$state, undefined, 2) }}</pre> -->
-    <q-btn @click="reset" :icon="mdiRestore" round />
-  </q-page>
+  </template>
 </template>
 
 <script setup lang="ts">
 import { useStateStore } from 'src/stores/state';
-import { ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import {
   mdiOpenInNew,
   mdiClose,
-  mdiRestore,
   mdiReflectHorizontal,
   mdiPlay,
   mdiStop,
@@ -150,8 +250,14 @@ import {
   mdiPencil,
   mdiFastForward,
   mdiRewind,
+  mdiStar,
+  mdiStarOutline,
+  mdiAccountSwitch,
+  mdiEye,
+  mdiEyeMinus,
+  mdiEyePlus,
 } from '@quasar/extras/mdi-v7';
-import { DisplayState } from './models';
+import { DisplayState, HA } from './models';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 
@@ -170,6 +276,30 @@ let timeOnStart: number = 0;
 let timeStarted: Date | undefined;
 let timer: number | undefined;
 
+const ot = ref<boolean>(false);
+const overtime = computed<boolean>({
+  get: () => ot.value,
+  set: (val) => {
+    ot.value = val;
+    if (val) {
+      if (!state.inner.empty) {
+        time.value = state.inner.overtime;
+      }
+    } else {
+      advantage.value = undefined;
+    }
+    sendDisplayState();
+  },
+});
+const ad = ref<HA>();
+const advantage = computed<HA | undefined>({
+  get: () => ad.value,
+  set: (val) => {
+    ad.value = val;
+    sendDisplayState();
+  },
+});
+
 const display = ref<WindowProxy | null>(null);
 let reversed = false;
 
@@ -184,7 +314,7 @@ function openDisplay() {
   display.value.addEventListener('beforeunload', () => {
     display.value = null;
   });
-  if (state.currentBout >= 0) {
+  if (!state.isEmpty) {
     const l = () => {
       sendDisplayState();
       window.removeEventListener('message', l);
@@ -214,13 +344,15 @@ function sendDisplayState() {
     home: {
       name: state.homeName()!,
       points: state.homeScore()!,
+      challenges: state.homeChallenges ?? 0,
     },
     away: {
       name: state.awayName()!,
       points: state.awayScore()!,
+      challenges: state.awayChallenges ?? 0,
     },
     time: time.value,
-    overtime: false,
+    overtime: overtime.value,
     next: state.isNext
       ? {
           home: state.homeName(1)!,
@@ -228,8 +360,17 @@ function sendDisplayState() {
         }
       : undefined,
     reversed: reversed,
+    advantage: advantage.value,
   };
   display.value.postMessage(ds);
+}
+
+function toggleTime() {
+  if (timeStarted) {
+    stopTime();
+  } else {
+    startTime();
+  }
 }
 
 function startTime() {
@@ -270,24 +411,70 @@ function setTime() {
     cancel: true,
   }).onOk((data) => {
     time.value = data;
+    sendDisplayState();
   });
-  sendDisplayState();
 }
 
-function add(who: 'home' | 'away', amount: number) {
+function add(who: HA, amount: number) {
   state.changeCurrentScore(who, amount);
   sendDisplayState();
 }
 
-function switchBout(d: 1 | -1) {
-  state.currentBout += d;
-  time.value = state.time;
+function teamSwitch(who: HA) {
+  if (state.inner.empty || !state.inner.team) {
+    return;
+  }
+  const cs =
+    who === 'home' ? state.inner.contestantsHome : state.inner.contestantsAway;
+  $q.dialog({
+    title: t('scorerControl.teamSwitch.title'),
+    message: t('scorerControl.teamSwitch.message', { substitute: cs[3] }),
+    options: {
+      type: 'radio',
+      model: '0',
+      items: cs.slice(0, 3).map((c, i) => ({ label: c, value: `${i}` })),
+    },
+  }).onOk((data) => {
+    const n = Number.parseInt(data);
+    const tmp = cs[n];
+    cs[n] = cs[3];
+    cs[3] = tmp;
+    sendDisplayState();
+  });
+}
+
+function addChallenge(who: HA, amount: number) {
+  state.changeCurrentChallenges(who, amount);
   sendDisplayState();
 }
 
-function reset() {
-  state.$reset();
+function switchBout(prev: boolean) {
+  state.nextBout(prev);
+  if (!state.inner.empty) {
+    time.value = state.inner.time;
+    overtime.value = false;
+  }
+  sendDisplayState();
 }
+
+function keyboardHandler(evt: KeyboardEvent) {
+  if (evt.key === ' ') {
+    evt.preventDefault();
+    evt.stopImmediatePropagation();
+    toggleTime();
+    return false;
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keyup', keyboardHandler, true);
+  window.addEventListener('beforeunload', closeDisplay);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keyup', keyboardHandler);
+  window.removeEventListener('beforeunload', closeDisplay);
+});
 </script>
 
 <style lang="scss" scoped>

@@ -1,117 +1,179 @@
 <template>
-  <q-page style="max-width: 400px">
+  <div class="container">
     <q-form @submit="submit">
-      <div class="q-pa-md">
-        <div class="text-h5">{{ $t('scorerSetup.contestants') }}</div>
-        <div v-for="(c, i) in contestants" :key="c.key">
-          <q-input v-model="contestants[i].name">
-            <template #prepend>
-              <q-btn
-                @click="removeContestant(i)"
-                :icon="mdiTrashCan"
-                flat
-                round
-              />
-            </template>
-          </q-input>
-        </div>
-        <q-btn @click="addContestant" :icon="mdiPlus" round />
+      <div class="q-py-md">
+        <q-checkbox v-model="team" :label="$t('scorerSetup.teamToggleLabel')" />
       </div>
-      <div class="q-pa-md">
-        <div class="text-h5">{{ $t('scorerSetup.bouts') }}</div>
-        <div
-          v-for="(c, i) in bouts"
-          :key="c.key"
-          class="row items-center q-gutter-md"
-        >
-          <div class="col-shrink">
-            <q-btn @click="removeBout(i)" :icon="mdiTrashCan" flat round />
+      <q-card v-if="team" class="q-pa-md">
+        <q-card-section horizontal class="q-gutter-md">
+          <q-card-section class="col">
+            <div class="text-h5">
+              {{ $t('scorerSetup.team.home') }}
+            </div>
+            <div v-for="(c, i) in contestantsHome" :key="c.key">
+              <q-input v-model="c.name">
+                <template #prepend>{{ i + 1 }}.</template>
+              </q-input>
+            </div>
+          </q-card-section>
+          <q-separator vertical />
+          <q-card-section class="col">
+            <div class="text-h5">
+              {{ $t('scorerSetup.team.away') }}
+            </div>
+            <div v-for="(c, i) in contestantsAway" :key="c.key">
+              <q-input v-model="c.name">
+                <template #prepend>{{ i + 1 }}.</template>
+              </q-input>
+            </div>
+          </q-card-section>
+        </q-card-section>
+        <q-separator />
+        <q-card-section>
+          <div>
+            <q-input
+              v-model.number="time"
+              :label="$t('scorerSetup.teamTime')"
+            />
+            <q-input
+              v-model.number="overtime"
+              :label="$t('scorerSetup.overtime')"
+            />
+            <q-input
+              v-model.number="challenges"
+              :label="$t('scorerSetup.challenges')"
+            />
           </div>
-          <div class="col">
-            <q-select
-              v-model="bouts[i].home"
-              :options="contestants"
-              option-label="name"
-              option-value="key"
-              emit-value
-              map-options
-            ></q-select>
+        </q-card-section>
+      </q-card>
+      <q-card v-else class="q-py-md">
+        <q-card-section class="text-h5">
+          {{ $t('scorerSetup.contestants') }}
+        </q-card-section>
+        <q-card-section>
+          <div v-for="(c, i) in contestantsHome" :key="c.key">
+            <q-input v-model="contestantsHome[i].name">
+              <template #prepend>
+                <q-btn
+                  @click="removeContestant(i)"
+                  :icon="mdiTrashCan"
+                  flat
+                  round
+                />
+              </template>
+            </q-input>
           </div>
-          <div class="col">
-            <q-select
-              v-model="bouts[i].away"
-              :options="contestants"
-              option-label="name"
-              option-value="key"
-              emit-value
-              map-options
-            ></q-select>
-          </div>
-        </div>
-        <q-btn @click="addBout" :icon="mdiPlus" round />
-      </div>
+        </q-card-section>
+        <q-card-actions>
+          <q-space />
+          <q-btn @click="addContestant()" :icon="mdiPlus" round />
+        </q-card-actions>
+      </q-card>
+      <q-separator />
       <div>
         <q-btn label="Submit" type="submit" color="primary" />
       </div>
-      <pre>{{ JSON.stringify(bouts, undefined, 2) }}</pre>
     </q-form>
-  </q-page>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { uid } from 'quasar';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { mdiPlus, mdiTrashCan } from '@quasar/extras/mdi-v7';
 import { useStateStore } from 'src/stores/state';
+import { HA } from './models';
 
 const state = useStateStore();
+
+const team = ref<boolean>(false);
 
 interface Contestant {
   key: string;
   name: string;
 }
 
-const contestants = ref<Contestant[]>([]);
+const contestantsHome = ref<Contestant[]>([]);
+const contestantsAway = ref<Contestant[]>([]);
 
-function addContestant() {
-  contestants.value.push({
+const time = ref<number>(180);
+const overtime = ref<number>(60);
+const challenges = ref<number>(3);
+
+watch(team, (newVal) => {
+  if (newVal) {
+    contestantsHome.value = [
+      {
+        key: uid(),
+        name: '',
+      },
+      {
+        key: uid(),
+        name: '',
+      },
+      {
+        key: uid(),
+        name: '',
+      },
+      {
+        key: uid(),
+        name: '',
+      },
+    ];
+    contestantsAway.value = [
+      {
+        key: uid(),
+        name: '',
+      },
+      {
+        key: uid(),
+        name: '',
+      },
+      {
+        key: uid(),
+        name: '',
+      },
+      {
+        key: uid(),
+        name: '',
+      },
+    ];
+  } else {
+    contestantsHome.value = [];
+    contestantsAway.value = [];
+  }
+});
+
+function addContestant(t: HA = 'home') {
+  const c = t === 'home' ? contestantsHome : contestantsAway;
+  c.value.push({
     key: uid(),
     name: '',
   });
 }
 
-function removeContestant(idx: number) {
-  contestants.value.splice(idx, 1);
-}
-
-interface Bout {
-  key: string;
-  home: string;
-  away: string;
-}
-
-const bouts = ref<Bout[]>([]);
-
-function addBout() {
-  bouts.value.push({
-    key: uid(),
-    home: '',
-    away: '',
-  });
-}
-
-function removeBout(idx: number) {
-  bouts.value.splice(idx, 1);
+function removeContestant(idx: number, t: HA = 'home') {
+  const c = t === 'home' ? contestantsHome : contestantsAway;
+  c.value.splice(idx, 1);
 }
 
 function submit() {
   console.log('submit');
-  state.init(
-    contestants.value.map((c) => c.name),
-    bouts.value.map((b) => [
-      contestants.value.findIndex((c) => c.key === b.home),
-      contestants.value.findIndex((c) => c.key === b.away),
-    ])
-  );
+  if (team.value) {
+    const csh = contestantsHome.value.map((c) => c.name);
+    const csa = contestantsAway.value.map((c) => c.name);
+    state.initTeam(csh, csa, time.value, overtime.value, challenges.value);
+  } else {
+    const cs = contestantsHome.value.map((c) => c.name);
+    state.initPool(cs, 20, 10);
+  }
 }
 </script>
+
+<style lang="scss" scoped>
+.container {
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
