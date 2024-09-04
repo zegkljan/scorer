@@ -3,11 +3,16 @@
     <div class="sides col row">
       <div v-if="display.reversed" class="home col column justify-between">
         <div class="name col-auto">{{ display.home.name }}</div>
-        <div class="challenges col row justify-center">
+        <div class="resources col row justify-center">
           <q-icon
             v-for="n in display.home.challenges"
             :key="n"
             :name="mdiEye"
+          />
+          <q-icon
+            v-for="n in display.home.timeouts"
+            :key="n"
+            :name="mdiClock"
           />
         </div>
         <div class="score col-auto">{{ display.home.points }}</div>
@@ -20,11 +25,16 @@
       </div>
       <div v-else class="away col column justify-between">
         <div class="name col-auto">{{ display.away.name }}</div>
-        <div class="challenges col row justify-center">
+        <div class="resources col row justify-center">
           <q-icon
             v-for="n in display.away.challenges"
             :key="n"
             :name="mdiEye"
+          />
+          <q-icon
+            v-for="n in display.away.timeouts"
+            :key="n"
+            :name="mdiClock"
           />
         </div>
         <div class="score col-auto">{{ display.away.points }}</div>
@@ -37,11 +47,16 @@
       </div>
       <div v-if="display.reversed" class="away col column justify-between">
         <div class="name col-auto">{{ display.away.name }}</div>
-        <div class="challenges col row justify-center">
+        <div class="resources col row justify-center">
           <q-icon
             v-for="n in display.away.challenges"
             :key="n"
             :name="mdiEye"
+          />
+          <q-icon
+            v-for="n in display.away.timeouts"
+            :key="n"
+            :name="mdiClock"
           />
         </div>
         <div class="score col-auto">{{ display.away.points }}</div>
@@ -54,11 +69,16 @@
       </div>
       <div v-else class="home col column justify-between">
         <div class="name col-auto">{{ display.home.name }}</div>
-        <div class="challenges col row justify-center">
+        <div class="resources col row justify-center">
           <q-icon
             v-for="n in display.home.challenges"
             :key="n"
             :name="mdiEye"
+          />
+          <q-icon
+            v-for="n in display.home.timeouts"
+            :key="n"
+            :name="mdiClock"
           />
         </div>
         <div class="score col-auto">{{ display.home.points }}</div>
@@ -101,13 +121,45 @@
         </div>
       </div>
     </div>
+    <q-dialog
+      v-if="display?.timeout !== undefined"
+      :model-value="true"
+      full-width
+      full-height
+      persistent
+    >
+      <q-card
+        class="timeout column"
+        :class="{
+          home: display.timeout.who === 'home',
+          away: display.timeout.who === 'away',
+        }"
+      >
+        <q-card-section class="col-auto text-center title">
+          {{ $t('display.timeout') }}
+        </q-card-section>
+        <q-space />
+        <q-card-section class="text-center col-auto">
+          <q-circular-progress
+            :value="display.timeout.fraction"
+            :min="0"
+            :max="1"
+            size="50vh"
+            show-value
+          >
+            {{ timeFormat.format(display.timeout.time) }}
+          </q-circular-progress>
+        </q-card-section>
+        <q-space />
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { DisplayState } from 'src/components/models';
 import { onMounted, ref } from 'vue';
-import { mdiShieldStar, mdiEye } from '@quasar/extras/mdi-v7';
+import { mdiShieldStar, mdiEye, mdiClock } from '@quasar/extras/mdi-v7';
 
 const timeFormat = Intl.NumberFormat(undefined, {
   style: 'decimal',
@@ -120,6 +172,13 @@ const display = ref<DisplayState | undefined>(undefined);
 window.addEventListener('message', (evt) => {
   console.log('message', evt);
   display.value = evt.data;
+  // if (display.value !== undefined) {
+  //   display.value.timeout = {
+  //     who: 'home',
+  //     time: 10,
+  //     fraction: 0.75,
+  //   };
+  // }
 });
 
 onMounted(() => {
@@ -134,7 +193,7 @@ onMounted(() => {
   .sides {
     .home {
       background-color: red;
-      color: black;
+      color: white;
     }
 
     .away {
@@ -142,7 +201,7 @@ onMounted(() => {
       color: white;
     }
 
-    .challenges > * {
+    .resources > * {
       margin-left: 2vh;
       margin-right: 2vh;
     }
@@ -162,7 +221,7 @@ onMounted(() => {
     .name {
       font-size: 7.5vh;
     }
-    .challenges {
+    .resources {
       font-size: 5vh;
     }
     .score {
@@ -177,6 +236,21 @@ onMounted(() => {
   }
   .next {
     font-size: 5vh;
+  }
+}
+
+.timeout {
+  .title {
+    font-size: 15vh;
+  }
+
+  &.home {
+    background-color: red;
+    color: white;
+  }
+  &.away {
+    background-color: blue;
+    color: white;
   }
 }
 </style>

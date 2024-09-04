@@ -6,7 +6,7 @@
           <div class="name col-auto">{{ state.homeName() }}</div>
           <div
             v-if="state.inner.team"
-            class="challenges col-auto row justify-center"
+            class="resources col-auto row justify-center"
           >
             <q-icon
               v-for="n in state.inner.challengesRemaining[0]"
@@ -14,22 +14,33 @@
               :name="mdiEye"
               size="sm"
             />
+            <q-icon
+              v-for="n in state.inner.timeoutsRemaining[0]"
+              :key="n"
+              :name="mdiClockOutline"
+              size="sm"
+            />
           </div>
-          <div class="score col-auto">{{ state.homeScore() }}</div>
+          <div class="score col-auto">
+            {{ state.homeScore() }}
+            <span v-if="timeoutOn === 'home'"
+              >| {{ timeFormat.format(timeoutTime) }}</span
+            >
+          </div>
           <div class="btn col-auto row justify-center">
             <div class="col column">
               <div class="col row justify-center">
                 <q-btn
                   @click="add('home', 1)"
                   :icon="mdiPlus"
-                  size="xl"
+                  size="lg"
                   flat
                   dense
                 />
                 <q-btn
                   @click="add('home', -1)"
                   :icon="mdiMinus"
-                  size="xl"
+                  size="lg"
                   flat
                   dense
                 />
@@ -37,32 +48,44 @@
                   v-if="overtime"
                   @click="advantage = 'home'"
                   :icon="advantage === 'home' ? mdiStar : mdiStarOutline"
-                  size="l"
+                  size="lg"
                   flat
                 />
               </div>
-              <div class="col row justify-center">
+              <div class="col row justify-center q-gutter-md q-pb-md">
                 <q-btn
                   v-if="state.inner.team"
                   @click="teamSwitch('home')"
                   :icon="mdiAccountSwitch"
-                  size="xl"
-                  flat
+                  size="lg"
+                  dense
                 />
                 <q-btn
                   v-if="state.inner.team"
                   @click="addChallenge('home', -1)"
                   :icon="mdiEyeMinus"
-                  size="xl"
-                  flat
+                  size="lg"
                   dense
                 />
                 <q-btn
                   v-if="state.inner.team"
                   @click="addChallenge('home', 1)"
                   :icon="mdiEyePlus"
-                  size="xl"
-                  flat
+                  size="lg"
+                  dense
+                />
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="
+                    () =>
+                      timeoutOn === undefined
+                        ? timeoutStart('home')
+                        : timeoutStop()
+                  "
+                  :label="$t('scorerControl.timeout')"
+                  :icon-right="timeoutOn !== 'home' ? mdiPlay : mdiStop"
+                  :disable="timeoutOn === 'away'"
+                  size="lg"
                   dense
                 />
               </div>
@@ -73,7 +96,7 @@
           <div class="name col-auto">{{ state.awayName() }}</div>
           <div
             v-if="state.inner.team"
-            class="challenges col-auto row justify-center"
+            class="resources col-auto row justify-center"
           >
             <q-icon
               v-for="n in state.inner.challengesRemaining[1]"
@@ -81,22 +104,33 @@
               :name="mdiEye"
               size="sm"
             />
+            <q-icon
+              v-for="n in state.inner.timeoutsRemaining[1]"
+              :key="n"
+              :name="mdiClockOutline"
+              size="sm"
+            />
           </div>
-          <div class="score col-auto">{{ state.awayScore() }}</div>
+          <div class="score col-auto">
+            {{ state.awayScore() }}
+            <span v-if="timeoutOn === 'away'"
+              >| {{ timeFormat.format(timeoutTime) }}</span
+            >
+          </div>
           <div class="btn col-auto row justify-center">
             <div class="col column">
               <div class="col row justify-center">
                 <q-btn
                   @click="add('away', 1)"
                   :icon="mdiPlus"
-                  size="xl"
+                  size="lg"
                   flat
                   dense
                 />
                 <q-btn
                   @click="add('away', -1)"
                   :icon="mdiMinus"
-                  size="xl"
+                  size="lg"
                   flat
                   dense
                 />
@@ -104,32 +138,44 @@
                   v-if="overtime"
                   @click="advantage = 'away'"
                   :icon="advantage === 'away' ? mdiStar : mdiStarOutline"
-                  size="l"
+                  size="lg"
                   flat
                 />
               </div>
-              <div class="col row justify-center">
+              <div class="col row justify-center q-gutter-md q-pb-md">
                 <q-btn
                   v-if="state.inner.team"
                   @click="teamSwitch('away')"
                   :icon="mdiAccountSwitch"
-                  size="xl"
-                  flat
+                  size="lg"
+                  dense
                 />
                 <q-btn
                   v-if="state.inner.team"
                   @click="addChallenge('away', -1)"
                   :icon="mdiEyeMinus"
-                  size="xl"
-                  flat
+                  size="lg"
                   dense
                 />
                 <q-btn
                   v-if="state.inner.team"
                   @click="addChallenge('away', 1)"
                   :icon="mdiEyePlus"
-                  size="xl"
-                  flat
+                  size="lg"
+                  dense
+                />
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="
+                    () =>
+                      timeoutOn === undefined
+                        ? timeoutStart('away')
+                        : timeoutStop()
+                  "
+                  :label="$t('scorerControl.timeout')"
+                  :icon-right="timeoutOn !== 'away' ? mdiPlay : mdiStop"
+                  :disable="timeoutOn === 'home'"
+                  size="lg"
                   dense
                 />
               </div>
@@ -256,6 +302,7 @@ import {
   mdiEye,
   mdiEyeMinus,
   mdiEyePlus,
+  mdiClockOutline,
 } from '@quasar/extras/mdi-v7';
 import { DisplayState, HA } from './models';
 import { useQuasar } from 'quasar';
@@ -275,6 +322,12 @@ const time = ref<number>(0);
 let timeOnStart: number = 0;
 let timeStarted: Date | undefined;
 let timer: number | undefined;
+
+const timeoutOn = ref<HA | undefined>();
+const timeoutTime = ref<number>(0);
+let timeoutTimeOnStart: number = 0;
+let timeoutTimeStarted: Date | undefined;
+let timeoutTimer: number | undefined;
 
 const ot = ref<boolean>(false);
 const overtime = computed<boolean>({
@@ -345,14 +398,27 @@ function sendDisplayState() {
       name: state.homeName()!,
       points: state.homeScore()!,
       challenges: state.homeChallenges ?? 0,
+      timeouts: state.homeTimeouts ?? 0,
     },
     away: {
       name: state.awayName()!,
       points: state.awayScore()!,
       challenges: state.awayChallenges ?? 0,
+      timeouts: state.awayTimeouts ?? 0,
     },
     time: time.value,
     overtime: overtime.value,
+    timeout:
+      timeoutOn.value === undefined
+        ? undefined
+        : {
+            time: timeoutTime.value,
+            fraction:
+              !state.inner.empty && state.inner.team
+                ? timeoutTime.value / state.inner.timeoutTime
+                : 0,
+            who: timeoutOn.value,
+          },
     next: state.isNext
       ? {
           home: state.homeName(1)!,
@@ -448,6 +514,32 @@ function addChallenge(who: HA, amount: number) {
   sendDisplayState();
 }
 
+function timeoutStart(who: HA) {
+  if (state.inner.empty || !state.inner.team) {
+    return;
+  }
+  state.changeCurrentTimeouts(who, -1);
+  timeoutTimeOnStart = state.inner.timeoutTime;
+  timeoutTimeStarted = new Date();
+  timeoutTimer = window.setInterval(() => {
+    timeoutTime.value =
+      timeoutTimeOnStart -
+      (new Date().getTime() - (timeoutTimeStarted?.getTime() ?? 0)) / 1000;
+    if (timeoutTime.value <= 0) {
+      timeoutStop();
+    }
+    sendDisplayState();
+  }, 100);
+  timeoutOn.value = who;
+}
+
+function timeoutStop() {
+  window.clearInterval(timeoutTimer);
+  timeoutTimer = undefined;
+  timeoutOn.value = undefined;
+  sendDisplayState();
+}
+
 function switchBout(prev: boolean) {
   state.nextBout(prev);
   if (!state.inner.empty) {
@@ -458,11 +550,26 @@ function switchBout(prev: boolean) {
 }
 
 function keyboardHandler(evt: KeyboardEvent) {
+  console.log(evt);
   if (evt.key === ' ') {
     evt.preventDefault();
     evt.stopImmediatePropagation();
     toggleTime();
     return false;
+  } else if (evt.key === '+') {
+    if (evt.shiftKey) {
+      add('home', 1);
+    }
+    if (evt.altKey) {
+      add('away', 1);
+    }
+  } else if (evt.key === '-') {
+    if (evt.shiftKey) {
+      add('home', -1);
+    }
+    if (evt.altKey) {
+      add('away', -1);
+    }
   }
 }
 
@@ -484,7 +591,7 @@ onUnmounted(() => {
   .sides {
     .home {
       background-color: red;
-      color: black;
+      color: white;
     }
 
     .away {

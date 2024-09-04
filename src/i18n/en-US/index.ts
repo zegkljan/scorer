@@ -10,7 +10,15 @@ export default {
     team: {
       home: 'Team A',
       away: 'Team B',
+      time: 'Leg time',
+      timeoutTime: 'Timeout time',
+      timeouts: 'No. of timeouts',
     },
+    pool: {
+      time: 'Bout time',
+    },
+    overtime: 'Overtime',
+    challenges: 'No. of challenges',
   },
   scorerControl: {
     title: 'Scorer control',
@@ -23,6 +31,7 @@ export default {
     prevBout: 'Prev bout',
     nextBout: 'Next bout',
     overtime: 'Overtime',
+    timeout: 'to',
     teamSwitch: {
       title: 'Switch team member',
       message:
@@ -32,5 +41,6 @@ export default {
   display: {
     next: 'Next',
     overtime: 'ot',
+    timeout: 'Time-out',
   },
 };

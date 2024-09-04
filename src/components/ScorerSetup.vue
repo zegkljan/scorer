@@ -33,7 +33,7 @@
           <div>
             <q-input
               v-model.number="time"
-              :label="$t('scorerSetup.teamTime')"
+              :label="$t('scorerSetup.team.time')"
             />
             <q-input
               v-model.number="overtime"
@@ -42,6 +42,14 @@
             <q-input
               v-model.number="challenges"
               :label="$t('scorerSetup.challenges')"
+            />
+            <q-input
+              v-model.number="timeoutTime"
+              :label="$t('scorerSetup.team.timeoutTime')"
+            />
+            <q-input
+              v-model.number="timeouts"
+              :label="$t('scorerSetup.team.timeouts')"
             />
           </div>
         </q-card-section>
@@ -53,7 +61,8 @@
         <q-card-section>
           <div v-for="(c, i) in contestantsHome" :key="c.key">
             <q-input v-model="contestantsHome[i].name">
-              <template #prepend>
+              <template #prepend> {{ i + 1 }}. </template>
+              <template #append>
                 <q-btn
                   @click="removeContestant(i)"
                   :icon="mdiTrashCan"
@@ -63,11 +72,27 @@
               </template>
             </q-input>
           </div>
+          <div class="row q-pa-md">
+            <q-space />
+            <q-btn @click="addContestant()" :icon="mdiPlus" round />
+          </div>
         </q-card-section>
-        <q-card-actions>
-          <q-space />
-          <q-btn @click="addContestant()" :icon="mdiPlus" round />
-        </q-card-actions>
+        <q-card-section>
+          <div>
+            <q-input
+              v-model.number="time"
+              :label="$t('scorerSetup.pool.time')"
+            />
+            <q-input
+              v-model.number="overtime"
+              :label="$t('scorerSetup.overtime')"
+            />
+            <q-input
+              v-model.number="challenges"
+              :label="$t('scorerSetup.challenges')"
+            />
+          </div>
+        </q-card-section>
       </q-card>
       <q-separator />
       <div>
@@ -96,9 +121,11 @@ interface Contestant {
 const contestantsHome = ref<Contestant[]>([]);
 const contestantsAway = ref<Contestant[]>([]);
 
-const time = ref<number>(180);
-const overtime = ref<number>(60);
-const challenges = ref<number>(3);
+const time = ref<number>(0);
+const overtime = ref<number>(0);
+const challenges = ref<number>(0);
+const timeoutTime = ref<number>(0);
+const timeouts = ref<number>(0);
 
 watch(team, (newVal) => {
   if (newVal) {
@@ -162,10 +189,18 @@ function submit() {
   if (team.value) {
     const csh = contestantsHome.value.map((c) => c.name);
     const csa = contestantsAway.value.map((c) => c.name);
-    state.initTeam(csh, csa, time.value, overtime.value, challenges.value);
+    state.initTeam({
+      contestantsHome: csh,
+      contestantsAway: csa,
+      time: time.value,
+      overtime: overtime.value,
+      challenges: challenges.value,
+      timeoutTime: timeoutTime.value,
+      timeouts: timeouts.value,
+    });
   } else {
     const cs = contestantsHome.value.map((c) => c.name);
-    state.initPool(cs, 20, 10);
+    state.initPool(cs, time.value, overtime.value);
   }
 }
 </script>

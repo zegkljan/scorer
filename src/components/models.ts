@@ -4,6 +4,7 @@ interface Side {
   name: string;
   points: number;
   challenges: number;
+  timeouts: number;
 }
 
 export interface DisplayState {
@@ -12,6 +13,11 @@ export interface DisplayState {
   time: number;
   overtime: boolean;
   advantage?: HA;
+  timeout?: {
+    time: number;
+    fraction: number;
+    who: HA;
+  };
   reversed: boolean;
   next?: {
     home: string;

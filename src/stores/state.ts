@@ -22,8 +22,11 @@ interface StateTeam {
   time: number;
   challenges: number;
   overtime: number;
+  timeoutTime: number;
+  timeouts: number;
   score: [number, number];
   challengesRemaining: [number, number];
+  timeoutsRemaining: [number, number];
 }
 
 interface StateEmpty {
@@ -335,6 +338,26 @@ export const useStateStore = defineStore('state', {
         return undefined;
       }
     },
+    homeTimeouts: (state) => {
+      if (state.inner.empty) {
+        return undefined;
+      }
+      if (state.inner.team) {
+        return state.inner.timeoutsRemaining[0];
+      } else {
+        return undefined;
+      }
+    },
+    awayTimeouts: (state) => {
+      if (state.inner.empty) {
+        return undefined;
+      }
+      if (state.inner.team) {
+        return state.inner.timeoutsRemaining[1];
+      } else {
+        return undefined;
+      }
+    },
   },
   actions: {
     initPool(contestants: string[], time: number, overtime: number) {
@@ -355,13 +378,15 @@ export const useStateStore = defineStore('state', {
         overtime: overtime,
       };
     },
-    initTeam(
-      contestantsHome: string[],
-      contestantsAway: string[],
-      time: number,
-      overtime: number,
-      challenges: number
-    ) {
+    initTeam(options: {
+      contestantsHome: string[];
+      contestantsAway: string[];
+      time: number;
+      overtime: number;
+      challenges: number;
+      timeoutTime: number;
+      timeouts: number;
+    }) {
       const bouts: [number, number][] = [
         [2, 2],
         [0, 1],
@@ -376,15 +401,18 @@ export const useStateStore = defineStore('state', {
       this.inner = {
         empty: false,
         team: true,
-        contestantsHome: contestantsHome,
-        contestantsAway: contestantsAway,
+        contestantsHome: options.contestantsHome,
+        contestantsAway: options.contestantsAway,
         bouts: bouts,
         currentBout: -1,
-        time: time,
-        overtime: overtime,
-        challenges: challenges,
+        time: options.time,
+        overtime: options.overtime,
+        challenges: options.challenges,
+        timeoutTime: options.timeoutTime,
+        timeouts: options.timeouts,
         score: [0, 0],
-        challengesRemaining: [challenges, challenges],
+        challengesRemaining: [options.challenges, options.challenges],
+        timeoutsRemaining: [options.timeouts, options.timeouts],
       };
     },
     changeCurrentScore(who: HA, amount: number) {
@@ -406,6 +434,15 @@ export const useStateStore = defineStore('state', {
       }
       this.inner.challengesRemaining[who === 'home' ? 0 : 1] = Math.max(
         this.inner.challengesRemaining[who === 'home' ? 0 : 1] + amount,
+        0
+      );
+    },
+    changeCurrentTimeouts(who: HA, amount: number) {
+      if (this.inner.empty || !this.inner.team) {
+        return;
+      }
+      this.inner.timeoutsRemaining[who === 'home' ? 0 : 1] = Math.max(
+        this.inner.timeoutsRemaining[who === 'home' ? 0 : 1] + amount,
         0
       );
     },
