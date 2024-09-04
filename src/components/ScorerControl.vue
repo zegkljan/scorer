@@ -3,7 +3,7 @@
     <div v-if="state.inner.currentBout >= 0" class="local-display column">
       <div class="sides col row">
         <div class="home col column justify-between">
-          <div class="name col-auto">{{ state.homeName() }}</div>
+          <div class="name col-auto">{{ state.name('home') }}</div>
           <div
             v-if="state.inner.team"
             class="resources col-auto row justify-center"
@@ -22,7 +22,7 @@
             />
           </div>
           <div class="score col-auto">
-            {{ state.homeScore() }}
+            {{ state.score('home') }}
             <span v-if="timeoutOn === 'home'"
               >| {{ timeFormat.format(timeoutTime) }}</span
             >
@@ -43,6 +43,23 @@
                   size="lg"
                   flat
                   dense
+                />
+                <q-btn
+                  @click="card('home')"
+                  :icon="mdiCards"
+                  :flat="!cardHome"
+                  size="lg"
+                  color="yellow"
+                  dense
+                />
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="card('home', true)"
+                  :icon="mdiAccountCard"
+                  size="lg"
+                  color="yellow"
+                  dense
+                  flat
                 />
                 <q-btn
                   v-if="overtime"
@@ -93,7 +110,7 @@
           </div>
         </div>
         <div class="away col column justify-between">
-          <div class="name col-auto">{{ state.awayName() }}</div>
+          <div class="name col-auto">{{ state.name('away') }}</div>
           <div
             v-if="state.inner.team"
             class="resources col-auto row justify-center"
@@ -112,7 +129,7 @@
             />
           </div>
           <div class="score col-auto">
-            {{ state.awayScore() }}
+            {{ state.score('away') }}
             <span v-if="timeoutOn === 'away'"
               >| {{ timeFormat.format(timeoutTime) }}</span
             >
@@ -133,6 +150,23 @@
                   size="lg"
                   flat
                   dense
+                />
+                <q-btn
+                  @click="card('away')"
+                  :icon="mdiCards"
+                  :flat="!cardAway"
+                  size="lg"
+                  color="yellow"
+                  dense
+                />
+                <q-btn
+                  v-if="state.inner.team"
+                  @click="card('away', true)"
+                  :icon="mdiAccountCard"
+                  size="lg"
+                  color="yellow"
+                  dense
+                  flat
                 />
                 <q-btn
                   v-if="overtime"
@@ -269,16 +303,21 @@
               class="col row"
               :class="{ current: i === state.inner.currentBout }"
             >
-              <div class="col text-right">{{ state.homeName(i, false) }}</div>
+              <div class="col text-right">
+                {{ state.name('home', i, false) }}
+              </div>
               <div class="col-1 justify-center text-center">
                 {{ i + 1 }}
               </div>
-              <div class="col text-left">{{ state.awayName(i, false) }}</div>
+              <div class="col text-left">
+                {{ state.name('away', i, false) }}
+              </div>
             </div>
           </div>
         </q-card-section>
       </q-card-section>
     </q-card>
+    <pre>{{ JSON.stringify(state.inner, undefined, 2) }}</pre>
   </template>
 </template>
 
@@ -303,14 +342,19 @@ import {
   mdiEyeMinus,
   mdiEyePlus,
   mdiClockOutline,
+  mdiCards,
+  mdiAccountCard,
 } from '@quasar/extras/mdi-v7';
-import { DisplayState, HA } from './models';
+import { DisplayState, HA, ha2n } from './models';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 
 const $q = useQuasar();
 const { t } = useI18n();
 const state = useStateStore();
+
+const cardHome = computed<boolean>(() => state.card('home'));
+const cardAway = computed<boolean>(() => state.card('away'));
 
 const timeFormat = Intl.NumberFormat(undefined, {
   style: 'decimal',
@@ -395,16 +439,18 @@ function sendDisplayState() {
 
   const ds: DisplayState = {
     home: {
-      name: state.homeName()!,
-      points: state.homeScore()!,
-      challenges: state.homeChallenges ?? 0,
-      timeouts: state.homeTimeouts ?? 0,
+      name: state.name('home')!,
+      points: state.score('home')!,
+      card: cardHome.value,
+      challenges: state.challenges('home') ?? 0,
+      timeouts: state.timeouts('home') ?? 0,
     },
     away: {
-      name: state.awayName()!,
-      points: state.awayScore()!,
-      challenges: state.awayChallenges ?? 0,
-      timeouts: state.awayTimeouts ?? 0,
+      name: state.name('away')!,
+      points: state.score('away')!,
+      card: cardAway.value,
+      challenges: state.challenges('away') ?? 0,
+      timeouts: state.timeouts('away') ?? 0,
     },
     time: time.value,
     overtime: overtime.value,
@@ -421,8 +467,8 @@ function sendDisplayState() {
           },
     next: state.isNext
       ? {
-          home: state.homeName(1)!,
-          away: state.awayName(1)!,
+          home: state.name('home', 1)!,
+          away: state.name('away', 1)!,
         }
       : undefined,
     reversed: reversed,
@@ -486,12 +532,24 @@ function add(who: HA, amount: number) {
   sendDisplayState();
 }
 
+function card(who: HA, team: boolean = false) {
+  console.log(team);
+  if (team) {
+    state.changeTeamCard(who, true);
+  } else {
+    state.changeCurrentCard(
+      who,
+      who === 'home' ? !cardHome.value : !cardAway.value
+    );
+  }
+  sendDisplayState();
+}
+
 function teamSwitch(who: HA) {
   if (state.inner.empty || !state.inner.team) {
     return;
   }
-  const cs =
-    who === 'home' ? state.inner.contestantsHome : state.inner.contestantsAway;
+  const cs = state.inner.contestants[ha2n(who)];
   $q.dialog({
     title: t('scorerControl.teamSwitch.title'),
     message: t('scorerControl.teamSwitch.message', { substitute: cs[3] }),

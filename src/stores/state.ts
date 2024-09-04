@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { HA } from 'src/components/models';
+import { HA, ha2n } from 'src/components/models';
 
 interface StatePool {
   empty: false;
@@ -7,6 +7,7 @@ interface StatePool {
   contestants: string[];
   bouts: [number, number][];
   results: [number, number][];
+  cards: [boolean, boolean][];
   currentBout: number;
   time: number;
   overtime: number;
@@ -15,8 +16,7 @@ interface StatePool {
 interface StateTeam {
   empty: false;
   team: true;
-  contestantsHome: string[];
-  contestantsAway: string[];
+  contestants: [string[], string[]];
   bouts: [number, number][];
   currentBout: number;
   time: number;
@@ -25,6 +25,7 @@ interface StateTeam {
   timeoutTime: number;
   timeouts: number;
   score: [number, number];
+  cards: [number[], number[]];
   challengesRemaining: [number, number];
   timeoutsRemaining: [number, number];
 }
@@ -254,9 +255,9 @@ export const useStateStore = defineStore('state', {
     isNext: (state) =>
       !state.inner.empty &&
       state.inner.currentBout + 1 < state.inner.bouts.length,
-    homeName:
+    name:
       (state) =>
-      (i = 0, rel = true) => {
+      (who: HA, i = 0, rel = true) => {
         if (state.inner.empty) {
           return undefined;
         }
@@ -265,95 +266,69 @@ export const useStateStore = defineStore('state', {
           return undefined;
         }
         if (state.inner.team) {
-          return state.inner.contestantsHome[state.inner.bouts[n][0]];
+          return state.inner.contestants[ha2n(who)][
+            state.inner.bouts[n][ha2n(who)]
+          ];
         } else {
-          return state.inner.contestants[state.inner.bouts[n][0]];
+          return state.inner.contestants[state.inner.bouts[n][ha2n(who)]];
         }
       },
-    awayName:
+    score:
       (state) =>
-      (i = 0, rel = true) => {
+      (who: HA, i = 0, rel = true) => {
         if (state.inner.empty) {
           return undefined;
+        }
+        if (state.inner.team) {
+          return state.inner.score[ha2n(who)];
+        } else {
+          const n = rel ? state.inner.currentBout + i : i;
+          if (n < 0 || n >= state.inner.results.length) {
+            return undefined;
+          }
+          return state.inner.results[n][ha2n(who)];
+        }
+      },
+    card:
+      (state) =>
+      (who: HA, i = 0, rel = true) => {
+        if (state.inner.empty) {
+          return false;
         }
         const n = rel ? state.inner.currentBout + i : i;
         if (n < 0 || n >= state.inner.bouts.length) {
-          return undefined;
+          return false;
         }
         if (state.inner.team) {
-          return state.inner.contestantsAway[state.inner.bouts[n][1]];
-        } else {
-          return state.inner.contestants[state.inner.bouts[n][1]];
-        }
-      },
-    homeScore:
-      (state) =>
-      (i = 0, rel = true) => {
-        if (state.inner.empty) {
-          return undefined;
-        }
-        if (state.inner.team) {
-          return state.inner.score[0];
-        } else {
-          const n = rel ? state.inner.currentBout + i : i;
-          if (n < 0 || n >= state.inner.results.length) {
-            return undefined;
+          for (const i of state.inner.cards[ha2n(who)]) {
+            if (i === state.inner.bouts[n][ha2n(who)]) {
+              return true;
+            }
           }
-          return state.inner.results[n][0];
-        }
-      },
-    awayScore:
-      (state) =>
-      (i = 0, rel = true) => {
-        if (state.inner.empty) {
-          return undefined;
-        }
-        if (state.inner.team) {
-          return state.inner.score[1];
+          return false;
         } else {
-          const n = rel ? state.inner.currentBout + i : i;
-          if (n < 0 || n >= state.inner.results.length) {
-            return undefined;
+          if (n < 0 || n >= state.inner.cards.length) {
+            return false;
           }
-          return state.inner.results[n][1];
+          return state.inner.cards[n][ha2n(who)];
         }
       },
-    homeChallenges: (state) => {
+    challenges: (state) => (who: HA) => {
       if (state.inner.empty) {
         return undefined;
       }
       if (state.inner.team) {
-        return state.inner.challengesRemaining[0];
+        return state.inner.challengesRemaining[ha2n(who)];
       } else {
         return undefined;
       }
     },
-    awayChallenges: (state) => {
+    timeouts: (state) => (who: HA) => {
       if (state.inner.empty) {
         return undefined;
       }
       if (state.inner.team) {
-        return state.inner.challengesRemaining[1];
-      } else {
-        return undefined;
-      }
-    },
-    homeTimeouts: (state) => {
-      if (state.inner.empty) {
-        return undefined;
-      }
-      if (state.inner.team) {
-        return state.inner.timeoutsRemaining[0];
-      } else {
-        return undefined;
-      }
-    },
-    awayTimeouts: (state) => {
-      if (state.inner.empty) {
-        return undefined;
-      }
-      if (state.inner.team) {
-        return state.inner.timeoutsRemaining[1];
+        return state.inner.timeoutsRemaining[ha2n(who)];
       } else {
         return undefined;
       }
@@ -374,6 +349,7 @@ export const useStateStore = defineStore('state', {
         bouts: bouts,
         currentBout: -1,
         results: bouts.map(() => [0, 0]),
+        cards: bouts.map(() => [false, false]),
         time: time,
         overtime: overtime,
       };
@@ -401,8 +377,7 @@ export const useStateStore = defineStore('state', {
       this.inner = {
         empty: false,
         team: true,
-        contestantsHome: options.contestantsHome,
-        contestantsAway: options.contestantsAway,
+        contestants: [options.contestantsHome, options.contestantsAway],
         bouts: bouts,
         currentBout: -1,
         time: options.time,
@@ -411,6 +386,7 @@ export const useStateStore = defineStore('state', {
         timeoutTime: options.timeoutTime,
         timeouts: options.timeouts,
         score: [0, 0],
+        cards: [[], []],
         challengesRemaining: [options.challenges, options.challenges],
         timeoutsRemaining: [options.timeouts, options.timeouts],
       };
@@ -428,12 +404,45 @@ export const useStateStore = defineStore('state', {
         r[1] += amount;
       }
     },
+    changeCurrentCard(who: HA, val: boolean) {
+      if (this.inner.empty) {
+        return;
+      }
+      const s = ha2n(who);
+      if (this.inner.team) {
+        const c = this.inner.cards[ha2n(who)];
+        const id = this.inner.bouts[this.inner.currentBout][s];
+        let idx = -1;
+        for (let i = 0; i < c.length; i++) {
+          if (c[i] === id) {
+            idx = i;
+            break;
+          }
+        }
+        if (idx === -1 && val) {
+          c.push(id);
+        } else if (idx !== -1 && !val) {
+          c.splice(idx, 1);
+        }
+      } else {
+        this.inner.cards[this.inner.currentBout][s] = val;
+      }
+    },
+    changeTeamCard(who: HA, val: boolean) {
+      if (this.inner.empty || !this.inner.team) {
+        return;
+      }
+      const s = ha2n(who);
+      this.inner.cards[s] = val
+        ? this.inner.contestants[s].map((c, i) => i)
+        : [];
+    },
     changeCurrentChallenges(who: HA, amount: number) {
       if (this.inner.empty || !this.inner.team) {
         return;
       }
-      this.inner.challengesRemaining[who === 'home' ? 0 : 1] = Math.max(
-        this.inner.challengesRemaining[who === 'home' ? 0 : 1] + amount,
+      this.inner.challengesRemaining[ha2n(who)] = Math.max(
+        this.inner.challengesRemaining[ha2n(who)] + amount,
         0
       );
     },
@@ -441,8 +450,8 @@ export const useStateStore = defineStore('state', {
       if (this.inner.empty || !this.inner.team) {
         return;
       }
-      this.inner.timeoutsRemaining[who === 'home' ? 0 : 1] = Math.max(
-        this.inner.timeoutsRemaining[who === 'home' ? 0 : 1] + amount,
+      this.inner.timeoutsRemaining[ha2n(who)] = Math.max(
+        this.inner.timeoutsRemaining[ha2n(who)] + amount,
         0
       );
     },

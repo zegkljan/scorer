@@ -1,8 +1,16 @@
 export type HA = 'home' | 'away';
 
-interface Side {
+export function ha2n(who: HA): 0 | 1 {
+  if (who === 'home') {
+    return 0;
+  }
+  return 1;
+}
+
+export interface Side {
   name: string;
   points: number;
+  card: boolean;
   challenges: number;
   timeouts: number;
 }

@@ -1,94 +1,18 @@
 <template>
   <div v-if="display !== undefined" class="fit display column">
-    <div class="sides col row">
-      <div v-if="display.reversed" class="home col column justify-between">
-        <div class="name col-auto">{{ display.home.name }}</div>
-        <div class="resources col row justify-center">
-          <q-icon
-            v-for="n in display.home.challenges"
-            :key="n"
-            :name="mdiEye"
-          />
-          <q-icon
-            v-for="n in display.home.timeouts"
-            :key="n"
-            :name="mdiClock"
-          />
-        </div>
-        <div class="score col-auto">{{ display.home.points }}</div>
-        <div
-          class="advantage col-auto"
-          :class="{ invisible: display.advantage !== 'home' }"
-        >
-          <q-icon :name="mdiShieldStar" />
-        </div>
-      </div>
-      <div v-else class="away col column justify-between">
-        <div class="name col-auto">{{ display.away.name }}</div>
-        <div class="resources col row justify-center">
-          <q-icon
-            v-for="n in display.away.challenges"
-            :key="n"
-            :name="mdiEye"
-          />
-          <q-icon
-            v-for="n in display.away.timeouts"
-            :key="n"
-            :name="mdiClock"
-          />
-        </div>
-        <div class="score col-auto">{{ display.away.points }}</div>
-        <div
-          class="advantage col-auto"
-          :class="{ invisible: display.advantage !== 'away' }"
-        >
-          <q-icon :name="mdiShieldStar" />
-        </div>
-      </div>
-      <div v-if="display.reversed" class="away col column justify-between">
-        <div class="name col-auto">{{ display.away.name }}</div>
-        <div class="resources col row justify-center">
-          <q-icon
-            v-for="n in display.away.challenges"
-            :key="n"
-            :name="mdiEye"
-          />
-          <q-icon
-            v-for="n in display.away.timeouts"
-            :key="n"
-            :name="mdiClock"
-          />
-        </div>
-        <div class="score col-auto">{{ display.away.points }}</div>
-        <div
-          class="advantage col-auto"
-          :class="{ invisible: display.advantage !== 'away' }"
-        >
-          <q-icon :name="mdiShieldStar" />
-        </div>
-      </div>
-      <div v-else class="home col column justify-between">
-        <div class="name col-auto">{{ display.home.name }}</div>
-        <div class="resources col row justify-center">
-          <q-icon
-            v-for="n in display.home.challenges"
-            :key="n"
-            :name="mdiEye"
-          />
-          <q-icon
-            v-for="n in display.home.timeouts"
-            :key="n"
-            :name="mdiClock"
-          />
-        </div>
-        <div class="score col-auto">{{ display.home.points }}</div>
-        <div
-          class="advantage col-auto"
-          :class="{ invisible: display.advantage !== 'home' }"
-        >
-          <q-icon :name="mdiShieldStar" />
-        </div>
-      </div>
+    <div class="sides col row" :class="{ reverse: !display.reversed }">
+      <display-side
+        :card-align="display.reversed ? 'left' : 'right'"
+        :side="'home'"
+        :state="display.home"
+        :advantage="display.advantage === 'home'"
+      ></display-side>
+      <display-side
+        :card-align="display.reversed ? 'right' : 'left'"
+        :side="'away'"
+        :state="display.away"
+        :advantage="display.advantage === 'away'"
+      ></display-side>
     </div>
     <div
       class="time col-auto row justify-center"
@@ -159,7 +83,7 @@
 <script setup lang="ts">
 import { DisplayState } from 'src/components/models';
 import { onMounted, ref } from 'vue';
-import { mdiShieldStar, mdiEye, mdiClock } from '@quasar/extras/mdi-v7';
+import DisplaySide from 'src/components/DisplaySide.vue';
 
 const timeFormat = Intl.NumberFormat(undefined, {
   style: 'decimal',
