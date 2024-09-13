@@ -18,7 +18,7 @@
       class="card"
       :class="{ left: cardAlign === 'left', right: cardAlign === 'right' }"
     >
-      <q-icon :name="mdiCards" />
+      <q-icon :name="mdiCard" class="rotate-90" />
     </div>
   </div>
 </template>
@@ -28,7 +28,7 @@ import {
   mdiShieldStar,
   mdiEye,
   mdiClock,
-  mdiCards,
+  mdiCard,
 } from '@quasar/extras/mdi-v7';
 import { HA, Side } from 'src/components/models';
 

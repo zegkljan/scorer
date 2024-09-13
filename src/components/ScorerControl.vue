@@ -47,10 +47,12 @@
                 />
                 <q-btn
                   @click="card('home')"
-                  :icon="mdiCards"
+                  :icon="mdiCard"
                   :flat="!cardHome"
-                  size="lg"
+                  :text-color="cardHome ? 'black' : 'yellow'"
                   color="yellow"
+                  size="lg"
+                  class="rotate-90"
                   dense
                 />
                 <q-btn
@@ -155,10 +157,12 @@
                 />
                 <q-btn
                   @click="card('away')"
-                  :icon="mdiCards"
+                  :icon="mdiCard"
                   :flat="!cardAway"
-                  size="lg"
+                  :text-color="cardAway ? 'black' : 'yellow'"
                   color="yellow"
+                  size="lg"
+                  class="rotate-90"
                   dense
                 />
                 <q-btn
@@ -292,13 +296,24 @@
               :class="{ current: i === state.inner.currentBout }"
             >
               <div class="col text-right">
-                {{ state.name('home', i, false) }}
+                <q-icon
+                  v-if="state.card('home', i, false)"
+                  :name="mdiCard"
+                  class="rotate-90"
+                  color="yellow"
+                />{{ state.name('home', i, false) }}
               </div>
               <div class="col-1 justify-center text-center">
                 {{ i + 1 }}
               </div>
               <div class="col text-left">
-                {{ state.name('away', i, false) }}
+                {{ state.name('away', i, false)
+                }}<q-icon
+                  v-if="state.card('away', i, false)"
+                  :name="mdiCard"
+                  class="rotate-90"
+                  color="yellow"
+                />
               </div>
             </div>
           </div>
@@ -328,8 +343,8 @@ import {
   mdiEyeMinus,
   mdiEyePlus,
   mdiClockOutline,
-  mdiCards,
   mdiAccountCard,
+  mdiCard,
 } from '@quasar/extras/mdi-v7';
 import { DisplayState, HA, ha2n } from './models';
 import { useQuasar } from 'quasar';
