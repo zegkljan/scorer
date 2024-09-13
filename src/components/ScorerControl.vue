@@ -3,6 +3,7 @@
     <div v-if="state.inner.currentBout >= 0" class="local-display column">
       <div class="sides col row">
         <div class="home col column justify-between">
+          <div class="team col-auto">{{ state.teamName('home') }}</div>
           <div class="name col-auto">{{ state.name('home') }}</div>
           <div
             v-if="state.inner.team"
@@ -110,6 +111,7 @@
           </div>
         </div>
         <div class="away col column justify-between">
+          <div class="team col-auto">{{ state.teamName('away') }}</div>
           <div class="name col-auto">{{ state.name('away') }}</div>
           <div
             v-if="state.inner.team"
@@ -249,20 +251,6 @@
         <q-card-section class="col">
           <div>
             <q-btn
-              v-if="display === null"
-              @click="openDisplay"
-              :icon="mdiOpenInNew"
-              :label="$t('scorerControl.openDisplay')"
-            />
-            <q-btn
-              v-else
-              @click="closeDisplay"
-              :icon="mdiClose"
-              :label="$t('scorerControl.closeDisplay')"
-            />
-          </div>
-          <div>
-            <q-btn
               @click="reverseDisplay"
               :icon="mdiReflectHorizontal"
               :label="$t('scorerControl.flipDisplay')"
@@ -323,10 +311,8 @@
 
 <script setup lang="ts">
 import { useStateStore } from 'src/stores/state';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import {
-  mdiOpenInNew,
-  mdiClose,
   mdiReflectHorizontal,
   mdiPlay,
   mdiStop,
@@ -352,6 +338,11 @@ import { useI18n } from 'vue-i18n';
 const $q = useQuasar();
 const { t } = useI18n();
 const state = useStateStore();
+
+interface Props {
+  display: WindowProxy | null;
+}
+const props = defineProps<Props>();
 
 const cardHome = computed<boolean>(() => state.card('home'));
 const cardAway = computed<boolean>(() => state.card('away'));
@@ -397,35 +388,20 @@ const advantage = computed<HA | undefined>({
   },
 });
 
-const display = ref<WindowProxy | null>(null);
+watch(
+  () => props.display,
+  (val, oldVal) => {
+    if (oldVal === null && val !== null && !state.isEmpty) {
+      const l = () => {
+        sendDisplayState();
+        window.removeEventListener('message', l);
+      };
+      window.addEventListener('message', l);
+    }
+  }
+);
+
 let reversed = false;
-
-function openDisplay() {
-  if (display.value !== null) {
-    return;
-  }
-  display.value = window.open('/display', '_blank', 'popup');
-  if (display.value === null) {
-    return;
-  }
-  display.value.addEventListener('beforeunload', () => {
-    display.value = null;
-  });
-  if (!state.isEmpty) {
-    const l = () => {
-      sendDisplayState();
-      window.removeEventListener('message', l);
-    };
-    window.addEventListener('message', l);
-  }
-}
-
-function closeDisplay() {
-  if (display.value === null) {
-    return;
-  }
-  display.value.close();
-}
 
 function reverseDisplay() {
   reversed = !reversed;
@@ -433,12 +409,15 @@ function reverseDisplay() {
 }
 
 function sendDisplayState() {
-  if (display.value === null) {
+  if (props.display === null) {
     return;
   }
 
   const ds: DisplayState = {
+    header: 'DisplayState',
+    empty: false,
     home: {
+      teamName: state.teamName('home'),
       name: state.name('home')!,
       points: state.score('home')!,
       card: cardHome.value,
@@ -446,6 +425,7 @@ function sendDisplayState() {
       timeouts: state.timeouts('home') ?? 0,
     },
     away: {
+      teamName: state.teamName('away'),
       name: state.name('away')!,
       points: state.score('away')!,
       card: cardAway.value,
@@ -474,7 +454,7 @@ function sendDisplayState() {
     reversed: reversed,
     advantage: advantage.value,
   };
-  display.value.postMessage(ds);
+  props.display.postMessage(ds);
 }
 
 function toggleTime() {
@@ -633,12 +613,11 @@ function keyboardHandler(evt: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener('keyup', keyboardHandler, true);
-  window.addEventListener('beforeunload', closeDisplay);
+  sendDisplayState();
 });
 
 onUnmounted(() => {
   window.removeEventListener('keyup', keyboardHandler);
-  window.removeEventListener('beforeunload', closeDisplay);
 });
 </script>
 
@@ -655,6 +634,10 @@ onUnmounted(() => {
     .away {
       background-color: blue;
       color: white;
+    }
+
+    .team {
+      font-size: 1.5em;
     }
 
     .name {

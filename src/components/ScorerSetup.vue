@@ -10,6 +10,9 @@
             <div class="text-h5">
               {{ $t('scorerSetup.team.home') }}
             </div>
+            <div>
+              <q-input v-model="teamHome" />
+            </div>
             <div v-for="(c, i) in contestantsHome" :key="c.key">
               <q-input v-model="c.name">
                 <template #prepend>{{ i + 1 }}.</template>
@@ -20,6 +23,9 @@
           <q-card-section class="col">
             <div class="text-h5">
               {{ $t('scorerSetup.team.away') }}
+            </div>
+            <div>
+              <q-input v-model="teamAway" />
             </div>
             <div v-for="(c, i) in contestantsAway" :key="c.key">
               <q-input v-model="c.name">
@@ -118,6 +124,8 @@ interface Contestant {
   name: string;
 }
 
+const teamHome = ref<string>('');
+const teamAway = ref<string>('');
 const contestantsHome = ref<Contestant[]>([]);
 const contestantsAway = ref<Contestant[]>([]);
 
@@ -190,8 +198,14 @@ function submit() {
     const csh = contestantsHome.value.map((c) => c.name);
     const csa = contestantsAway.value.map((c) => c.name);
     state.initTeam({
-      contestantsHome: csh,
-      contestantsAway: csa,
+      home: {
+        name: teamHome.value,
+        contestants: csh,
+      },
+      away: {
+        name: teamAway.value,
+        contestants: csa,
+      },
       time: time.value,
       overtime: overtime.value,
       challenges: challenges.value,

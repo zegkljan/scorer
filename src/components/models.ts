@@ -8,6 +8,7 @@ export function ha2n(who: HA): 0 | 1 {
 }
 
 export interface Side {
+  teamName?: string;
   name: string;
   points: number;
   card: boolean;
@@ -15,7 +16,11 @@ export interface Side {
   timeouts: number;
 }
 
-export interface DisplayState {
+interface DisplayStateHeader {
+  header: 'DisplayState';
+}
+
+interface DisplayStateData {
   home: Side;
   away: Side;
   time: number;
@@ -34,3 +39,7 @@ export interface DisplayState {
     awayNo?: number;
   };
 }
+
+export type DisplayState =
+  | (DisplayStateHeader & { empty: true })
+  | (DisplayStateHeader & { empty: false } & DisplayStateData);

@@ -3,6 +3,7 @@
     class="side col column justify-between"
     :class="{ home: side === 'home', away: side === 'away' }"
   >
+    <div v-if="displayTeam" class="team">{{ state.teamName }}</div>
     <div class="name col-auto">{{ state.name }}</div>
     <div class="resources col row justify-center">
       <q-icon v-for="n in state.challenges" :key="n" :name="mdiEye" />
@@ -32,6 +33,7 @@ import {
 import { HA, Side } from 'src/components/models';
 
 interface Props {
+  displayTeam: boolean;
   cardAlign: 'left' | 'right';
   side: HA;
   state: Side;
@@ -86,6 +88,9 @@ defineProps<Props>();
 
 .display {
   .sides {
+    .team {
+      font-size: 5vh;
+    }
     .name {
       font-size: 7.5vh;
     }

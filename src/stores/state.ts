@@ -16,6 +16,7 @@ interface StatePool {
 interface StateTeam {
   empty: false;
   team: true;
+  names: [string, string];
   contestants: [string[], string[]];
   bouts: [number, number][];
   currentBout: number;
@@ -255,6 +256,12 @@ export const useStateStore = defineStore('state', {
     isNext: (state) =>
       !state.inner.empty &&
       state.inner.currentBout + 1 < state.inner.bouts.length,
+    teamName: (state) => (who: HA) => {
+      if (state.inner.empty || !state.inner.team) {
+        return undefined;
+      }
+      return state.inner.names[ha2n(who)];
+    },
     name:
       (state) =>
       (who: HA, i = 0, rel = true) => {
@@ -355,8 +362,14 @@ export const useStateStore = defineStore('state', {
       };
     },
     initTeam(options: {
-      contestantsHome: string[];
-      contestantsAway: string[];
+      home: {
+        name: string;
+        contestants: string[];
+      };
+      away: {
+        name: string;
+        contestants: string[];
+      };
       time: number;
       overtime: number;
       challenges: number;
@@ -377,7 +390,8 @@ export const useStateStore = defineStore('state', {
       this.inner = {
         empty: false,
         team: true,
-        contestants: [options.contestantsHome, options.contestantsAway],
+        names: [options.home.name, options.away.name],
+        contestants: [options.home.contestants, options.away.contestants],
         bouts: bouts,
         currentBout: -1,
         time: options.time,
