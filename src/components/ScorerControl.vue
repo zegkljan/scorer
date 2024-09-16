@@ -346,7 +346,7 @@ import {
   mdiAccountCard,
   mdiCard,
 } from '@quasar/extras/mdi-v7';
-import { DisplayState, HA, ha2n } from './models';
+import { DisplayState, HA, ha2n, timeFormat } from './models';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 
@@ -362,11 +362,6 @@ const props = defineProps<Props>();
 const cardHome = computed<boolean>(() => state.card('home'));
 const cardAway = computed<boolean>(() => state.card('away'));
 
-const timeFormat = Intl.NumberFormat(undefined, {
-  style: 'decimal',
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
 const timeOn = ref<boolean>(false);
 const time = ref<number>(0);
 let timeOnStart: number = 0;

@@ -22,6 +22,8 @@ export default {
   },
   scorerControl: {
     title: 'Scorer control',
+    genericTimer: 'Generic timer',
+    stop: 'Stop',
     startTime: 'Start time',
     stopTime: 'Stop time',
     setTime: 'Set time',

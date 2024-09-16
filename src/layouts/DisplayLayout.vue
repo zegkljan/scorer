@@ -178,37 +178,60 @@
       </q-card>
     </q-dialog>
   </div>
+  <q-dialog
+    :model-value="genericTimer !== null"
+    persistent
+    full-height
+    full-width
+  >
+    <q-card class="generic-timer column justify-start">
+      <q-space />
+      <div class="text-center col-auto">
+        <q-circular-progress
+          :value="genericTimer?.fraction"
+          :min="0"
+          :max="1"
+          size="50vh"
+          show-value
+        >
+          {{ timeFormat.format(genericTimer?.time ?? 0) }}
+        </q-circular-progress>
+      </div>
+      <q-space />
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
-import { DisplayState, ha2n } from 'src/components/models';
+import {
+  DisplayState,
+  DisplayTimerData,
+  ha2n,
+  timeFormat,
+} from 'src/components/models';
 import { onMounted, ref } from 'vue';
 import DisplaySide from 'src/components/DisplaySide.vue';
 
-const timeFormat = Intl.NumberFormat(undefined, {
-  style: 'decimal',
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-});
 const waitingAnimationDuration = 8;
 const clipKeyTimes = '0;0.85;1';
 const rotationKeyTimes = '0;0.85;1';
 
 const displayState = ref<DisplayState>({ header: 'DisplayState', empty: true });
+const genericTimer = ref<DisplayTimerData | null>(null);
 
 window.addEventListener('message', (evt) => {
+  console.log('message', evt);
+  switch (evt.data.header) {
+    case 'DisplayState':
+      displayState.value = evt.data;
+      break;
+    case 'DisplayTimer':
+      genericTimer.value = evt.data.timer;
+      break;
+  }
   if (evt.data.header !== 'DisplayState') {
     return;
   }
-  console.log('message', evt);
-  displayState.value = evt.data;
-  // if (display.value !== undefined) {
-  //   display.value.timeout = {
-  //     who: 'home',
-  //     time: 10,
-  //     fraction: 0.75,
-  //   };
-  // }
 });
 
 onMounted(() => {

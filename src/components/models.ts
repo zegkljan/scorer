@@ -43,3 +43,22 @@ interface DisplayStateData {
 export type DisplayState =
   | (DisplayStateHeader & { empty: true })
   | (DisplayStateHeader & { empty: false } & DisplayStateData);
+
+export interface DisplayTimerHeader {
+  header: 'DisplayTimer';
+}
+
+export interface DisplayTimerData {
+  time: number;
+  fraction: number;
+}
+
+export type DisplayTimer = DisplayTimerHeader & {
+  timer: DisplayTimerData | null;
+};
+
+export const timeFormat = Intl.NumberFormat(undefined, {
+  style: 'decimal',
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+});
