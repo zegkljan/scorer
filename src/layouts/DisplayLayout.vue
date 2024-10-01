@@ -106,6 +106,10 @@
         :state="displayState.away"
         :advantage="displayState.advantage === 'away'"
       ></display-side>
+      <div v-if="displayState.cap !== undefined" class="cap absolute-center">
+        <div class="cap-value">{{ displayState.cap }}</div>
+        <div class="cap-title text-uppercase">{{ $t('display.cap') }}</div>
+      </div>
     </div>
     <div
       class="time col-auto row justify-center"
@@ -249,6 +253,8 @@ onMounted(() => {
   text-align: center;
 
   .sides {
+    position: relative;
+
     .home {
       background-color: red;
       color: white;
@@ -262,6 +268,11 @@ onMounted(() => {
     .resources > * {
       margin-left: 2vh;
       margin-right: 2vh;
+    }
+
+    .cap {
+      background-color: white;
+      padding: 1vh 2vh;
     }
   }
 
@@ -287,6 +298,12 @@ onMounted(() => {
     }
     .advantage {
       font-size: 7.5vh;
+    }
+    .cap-title {
+      font-size: 3vh;
+    }
+    .cap-value {
+      font-size: 6vh;
     }
   }
   .time {

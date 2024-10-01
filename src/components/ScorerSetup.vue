@@ -57,6 +57,11 @@
               v-model.number="timeouts"
               :label="$t('scorerSetup.team.timeouts')"
             />
+            <q-input
+              v-model.number="cap"
+              :label="$t('scorerSetup.team.cap')"
+              :hint="$t('scorerSetup.team.capHint')"
+            />
           </div>
         </q-card-section>
       </q-card>
@@ -97,6 +102,11 @@
               v-model.number="challenges"
               :label="$t('scorerSetup.challenges')"
             />
+            <q-input
+              v-model.number="cap"
+              :label="$t('scorerSetup.pool.cap')"
+              :hint="$t('scorerSetup.pool.capHint')"
+            />
           </div>
         </q-card-section>
       </q-card>
@@ -134,6 +144,7 @@ const overtime = ref<number>(0);
 const challenges = ref<number>(0);
 const timeoutTime = ref<number>(0);
 const timeouts = ref<number>(0);
+const cap = ref<number | undefined>();
 
 watch(team, (newVal) => {
   if (newVal) {
@@ -211,10 +222,16 @@ function submit() {
       challenges: challenges.value,
       timeoutTime: timeoutTime.value,
       timeouts: timeouts.value,
+      cap: cap.value,
     });
   } else {
     const cs = contestantsHome.value.map((c) => c.name);
-    state.initPool(cs, time.value, overtime.value);
+    state.initPool({
+      contestants: cs,
+      time: time.value,
+      overtime: overtime.value,
+      cap: cap.value,
+    });
   }
 }
 </script>

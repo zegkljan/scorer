@@ -1,5 +1,7 @@
 export type HA = 'home' | 'away';
 
+export type HAA = HA | 'all';
+
 export function ha2n(who: HA): 0 | 1 {
   if (who === 'home') {
     return 0;
@@ -23,6 +25,7 @@ interface DisplayStateHeader {
 interface DisplayStateData {
   home: Side;
   away: Side;
+  cap: number | undefined;
   time: number;
   overtime: boolean;
   advantage?: HA;

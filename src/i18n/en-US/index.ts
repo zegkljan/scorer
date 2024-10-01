@@ -13,9 +13,14 @@ export default {
       time: 'Leg time',
       timeoutTime: 'Timeout time',
       timeouts: 'No. of timeouts',
+      cap: 'Leg point cap',
+      capHint:
+        'If set, will show the point cap of current leg in multiples of this number.',
     },
     pool: {
       time: 'Bout time',
+      cap: 'Bout point cap',
+      capHint: 'If set, will show this point cap.',
     },
     overtime: 'Overtime',
     challenges: 'No. of challenges',
@@ -44,5 +49,6 @@ export default {
     next: 'Next',
     overtime: 'ot',
     timeout: 'Time-out',
+    cap: 'Cap',
   },
 };

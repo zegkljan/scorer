@@ -222,6 +222,29 @@
             </div>
           </div>
         </div>
+        <div v-if="cap !== undefined" class="cap">
+          {{ cap }}
+        </div>
+        <div class="doubles">
+          <div>
+            <q-btn
+              @click="add('all', 1)"
+              :icon="mdiPlus"
+              size="md"
+              flat
+              dense
+            />
+          </div>
+          <div>
+            <q-btn
+              @click="add('all', -1)"
+              :icon="mdiMinus"
+              size="md"
+              flat
+              dense
+            />
+          </div>
+        </div>
       </div>
       <div class="time row column justify-center">
         <div class="value col">
@@ -346,7 +369,7 @@ import {
   mdiAccountCard,
   mdiCard,
 } from '@quasar/extras/mdi-v7';
-import { DisplayState, HA, ha2n, timeFormat } from './models';
+import { DisplayState, HA, HAA, ha2n, timeFormat } from './models';
 import { useQuasar } from 'quasar';
 import { useI18n } from 'vue-i18n';
 
@@ -373,6 +396,17 @@ const timeoutTime = ref<number>(0);
 let timeoutTimeOnStart: number = 0;
 let timeoutTimeStarted: Date | undefined;
 let timeoutTimer: number | undefined;
+
+const cap = computed<number | undefined>(() => {
+  if (state.inner.empty || state.inner.cap === undefined) {
+    return undefined;
+  }
+  if (state.inner.team) {
+    return state.inner.cap * (state.inner.currentBout + 1);
+  } else {
+    return state.inner.cap;
+  }
+});
 
 const ot = ref<boolean>(false);
 const overtime = computed<boolean>({
@@ -442,6 +476,7 @@ function sendDisplayState() {
       challenges: state.challenges('away') ?? 0,
       timeouts: state.timeouts('away') ?? 0,
     },
+    cap: cap.value,
     time: time.value,
     overtime: overtime.value,
     timeout:
@@ -517,7 +552,7 @@ function setTime() {
   });
 }
 
-function add(who: HA, amount: number) {
+function add(who: HAA, amount: number) {
   state.changeCurrentScore(who, amount);
   sendDisplayState();
 }
@@ -636,6 +671,8 @@ onUnmounted(() => {
   text-align: center;
 
   .sides {
+    position: relative;
+
     .home {
       background-color: red;
       color: white;
@@ -656,6 +693,28 @@ onUnmounted(() => {
 
     .score {
       font-size: 3em;
+    }
+
+    .cap {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: white;
+      font-size: 2em;
+      padding: 0.2em 0.5em;
+      border-radius: 1em;
+    }
+
+    .doubles {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: white;
+      font-size: 2em;
+      padding: 0.2em 0.5em;
+      border-radius: 1em;
     }
   }
 

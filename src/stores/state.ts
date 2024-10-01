@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { HA, ha2n } from 'src/components/models';
+import { HA, HAA, ha2n } from 'src/components/models';
 
 interface StatePool {
   empty: false;
@@ -11,6 +11,7 @@ interface StatePool {
   currentBout: number;
   time: number;
   overtime: number;
+  cap: number | undefined;
 }
 
 interface StateTeam {
@@ -29,6 +30,7 @@ interface StateTeam {
   cards: [number[], number[]];
   challengesRemaining: [number, number];
   timeoutsRemaining: [number, number];
+  cap: number | undefined;
 }
 
 interface StateEmpty {
@@ -342,9 +344,14 @@ export const useStateStore = defineStore('state', {
     },
   },
   actions: {
-    initPool(contestants: string[], time: number, overtime: number) {
+    initPool(options: {
+      contestants: string[];
+      time: number;
+      overtime: number;
+      cap: number | undefined;
+    }) {
       const bouts: [number, number][] | undefined = boutsBySize.get(
-        contestants.length
+        options.contestants.length
       );
       if (bouts === undefined) {
         return;
@@ -352,13 +359,14 @@ export const useStateStore = defineStore('state', {
       this.inner = {
         empty: false,
         team: false,
-        contestants: contestants,
+        contestants: options.contestants,
         bouts: bouts,
         currentBout: -1,
         results: bouts.map(() => [0, 0]),
         cards: bouts.map(() => [false, false]),
-        time: time,
-        overtime: overtime,
+        time: options.time,
+        overtime: options.overtime,
+        cap: options.cap,
       };
     },
     initTeam(options: {
@@ -375,6 +383,7 @@ export const useStateStore = defineStore('state', {
       challenges: number;
       timeoutTime: number;
       timeouts: number;
+      cap: number | undefined;
     }) {
       const bouts: [number, number][] = [
         [2, 2],
@@ -403,9 +412,10 @@ export const useStateStore = defineStore('state', {
         cards: [[], []],
         challengesRemaining: [options.challenges, options.challenges],
         timeoutsRemaining: [options.timeouts, options.timeouts],
+        cap: options.cap,
       };
     },
-    changeCurrentScore(who: HA, amount: number) {
+    changeCurrentScore(who: HAA, amount: number) {
       if (this.inner.empty) {
         return;
       }
@@ -414,7 +424,10 @@ export const useStateStore = defineStore('state', {
         : this.inner.results[this.inner.currentBout];
       if (who === 'home') {
         r[0] += amount;
+      } else if (who === 'away') {
+        r[1] += amount;
       } else {
+        r[0] += amount;
         r[1] += amount;
       }
     },
