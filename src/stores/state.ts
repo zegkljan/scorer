@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia';
+import { SessionStorage } from 'quasar';
 import { HA, HAA, ha2n } from 'src/components/models';
+
+export const STATE_STORAGE_KEY = 'state';
 
 interface StatePool {
   empty: false;
@@ -11,6 +14,7 @@ interface StatePool {
   currentBout: number;
   time: number;
   overtime: number;
+  currentTime: number;
   cap: number | undefined;
 }
 
@@ -30,6 +34,7 @@ interface StateTeam {
   cards: [number[], number[]];
   challengesRemaining: [number, number];
   timeoutsRemaining: [number, number];
+  currentTime: number;
   cap: number | undefined;
 }
 
@@ -251,7 +256,13 @@ const boutsBySize: Map<number, [number, number][]> = new Map<
 ]);
 
 export const useStateStore = defineStore('state', {
-  state: (): State => emptyState, //testState,
+  state: (): State => {
+    const rawState = SessionStorage.getItem(STATE_STORAGE_KEY);
+    if (rawState === null) {
+      return emptyState;
+    }
+    return rawState as State;
+  }, //testState,
   getters: {
     isEmpty: (state) => state.inner.empty === true,
     isPrev: (state) => !state.inner.empty && state.inner.currentBout > 0,
@@ -366,6 +377,7 @@ export const useStateStore = defineStore('state', {
         cards: bouts.map(() => [false, false]),
         time: options.time,
         overtime: options.overtime,
+        currentTime: options.time,
         cap: options.cap,
       };
     },
@@ -412,6 +424,7 @@ export const useStateStore = defineStore('state', {
         cards: [[], []],
         challengesRemaining: [options.challenges, options.challenges],
         timeoutsRemaining: [options.timeouts, options.timeouts],
+        currentTime: options.time,
         cap: options.cap,
       };
     },

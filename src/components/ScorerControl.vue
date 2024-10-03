@@ -248,7 +248,7 @@
       </div>
       <div class="time row column justify-center">
         <div class="value col">
-          {{ timeFormat.format(time) }}
+          {{ timeFormat.format(state.inner.currentTime) }}
         </div>
         <div class="btn col row justify-center">
           <div class="row q-gutter-md">
@@ -386,7 +386,6 @@ const cardHome = computed<boolean>(() => state.card('home'));
 const cardAway = computed<boolean>(() => state.card('away'));
 
 const timeOn = ref<boolean>(false);
-const time = ref<number>(0);
 let timeOnStart: number = 0;
 let timeStarted: Date | undefined;
 let timer: number | undefined;
@@ -415,7 +414,7 @@ const overtime = computed<boolean>({
     ot.value = val;
     if (val) {
       if (!state.inner.empty) {
-        time.value = state.inner.overtime;
+        state.inner.currentTime = state.inner.overtime;
       }
     } else {
       advantage.value = undefined;
@@ -477,7 +476,7 @@ function sendDisplayState() {
       timeouts: state.timeouts('away') ?? 0,
     },
     cap: cap.value,
-    time: time.value,
+    time: state.inner.empty ? 0 : state.inner.currentTime,
     overtime: overtime.value,
     timeout:
       timeoutOn.value === undefined
@@ -511,13 +510,19 @@ function toggleTime() {
 }
 
 function startTime() {
-  timeOnStart = time.value;
+  if (state.inner.empty) {
+    return;
+  }
+  timeOnStart = state.inner.currentTime;
   timeStarted = new Date();
   timer = window.setInterval(() => {
-    time.value =
+    if (state.inner.empty) {
+      return;
+    }
+    state.inner.currentTime =
       timeOnStart -
       (new Date().getTime() - (timeStarted?.getTime() ?? 0)) / 1000;
-    if (time.value <= 0) {
+    if (state.inner.currentTime <= 0) {
       stopTime();
     }
     sendDisplayState();
@@ -527,10 +532,13 @@ function startTime() {
 
 function stopTime() {
   window.clearInterval(timer);
-  time.value =
+  if (state.inner.empty) {
+    return;
+  }
+  state.inner.currentTime =
     timeOnStart - (new Date().getTime() - (timeStarted?.getTime() ?? 0)) / 1000;
-  if (time.value <= 0) {
-    time.value = 0;
+  if (state.inner.currentTime <= 0) {
+    state.inner.currentTime = 0;
   }
   timeStarted = undefined;
   timer = undefined;
@@ -539,15 +547,21 @@ function stopTime() {
 }
 
 function setTime() {
+  if (state.inner.empty) {
+    return;
+  }
   $q.dialog({
     title: t('scorerControl.setTime'),
     prompt: {
-      model: `${time.value}`,
+      model: `${state.inner.currentTime}`,
       type: 'number',
     },
     cancel: true,
   }).onOk((data) => {
-    time.value = data;
+    if (state.inner.empty) {
+      return;
+    }
+    state.inner.currentTime = data;
     sendDisplayState();
   });
 }
@@ -626,7 +640,7 @@ function timeoutStop() {
 function switchBout(prev: boolean) {
   state.nextBout(prev);
   if (!state.inner.empty) {
-    time.value = state.inner.time;
+    state.inner.currentTime = state.inner.time;
     overtime.value = false;
   }
   sendDisplayState();
