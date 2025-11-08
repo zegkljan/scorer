@@ -164,9 +164,6 @@ function openDisplay() {
   if (display.value === null) {
     return;
   }
-  display.value.addEventListener('beforeunload', () => {
-    display.value = null;
-  });
 }
 
 function closeDisplay() {
@@ -178,6 +175,13 @@ function closeDisplay() {
 
 onMounted(() => {
   window.addEventListener('beforeunload', closeDisplay);
+
+  window.addEventListener('message', (event) => {
+    if (event.data === 'child-closed') {
+      // process a notification that the display window was closed
+      display.value = null;
+    }
+  });
 });
 
 onUnmounted(() => {

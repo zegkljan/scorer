@@ -240,6 +240,13 @@ window.addEventListener('message', (evt) => {
 
 onMounted(() => {
   window.opener.postMessage('');
+
+  window.addEventListener('beforeunload', () => {
+    if (window.opener && !window.opener.closed) {
+      // Notify the parent window that this window is closing
+      window.opener.postMessage('child-closed', '*');
+    }
+  });
 });
 </script>
 
